@@ -6,10 +6,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "deployEscrow": "hardhat run ./scripts/deployEscrow.js --network kairos",
-    "deployEscrow:upgrade": "hardhat run ./scripts/upgradeEscrow.js --network kairos",
-    "deployCashFi": "hardhat run ./scripts/deployCashFi.js --network kairos",
-    "deployCashFi:upgrade": "hardhat run ./scripts/upgradeCashFi.js --network kairos",
+    "deployStaking": "hardhat run ./scripts/deployStaking.js --network sepolia",
+    "upgradeStaking": "hardhat run ./scripts/upgradeStaking.js --network sepolia",
+    "getProxyInfo": "hardhat run ./scripts/getProxyInfo.js --network sepolia",
     "test": "hardhat test"
   },
   "keywords": [],
@@ -46,5 +45,9 @@
     "typechain": "^8.3.2",
     "web3": "^4.16.0"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "dependencies": {
+    "bignumber.js": "^9.3.0",
+    "node-cron": "^4.1.0"
+  }
 }

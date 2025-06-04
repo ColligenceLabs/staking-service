@@ -9,8 +9,7 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { Pauser } from "./Pauser.sol";
-import { WalletConnectConfig } from "./WalletConnectConfig.sol";
-import { L2WCT } from "./L2WCT.sol";
+import { TalkenStakingConfig } from "./TalkenStakingConfig.sol";
 /**
  * @title StakeWeight
  * @notice This contract implements a vote-escrowed token model for WCT (WalletConnect Token)
@@ -52,7 +51,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   struct Init {
     /// @notice The address of the admin
     address admin;
-    /// @notice The address of the WalletConnectConfig contract
+    /// @notice The address of the TalkenStakingConfig contract
     address config;
   }
 
@@ -63,7 +62,8 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   // Define the storage namespace
   bytes32 constant STAKE_WEIGHT_STORAGE_POSITION = keccak256("com.walletconnect.stakeweight.storage");
   // Max lock duration
-  uint256 public constant MAX_LOCK_CAP = (209 weeks) - 1;
+//  uint256 public constant MAX_LOCK_CAP = (209 weeks) - 1;
+  uint256 public constant MAX_LOCK_CAP = (209 hours) - 1;
   // Multiplier for the slope calculation
   uint256 public constant MULTIPLIER = 1e18;
   // Action Types
@@ -85,7 +85,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   /// @custom:storage-location erc7201:com.walletconnect.stakeweight.storage
   struct StakeWeightStorage {
     /// @notice Configuration for WalletConnect
-    WalletConnectConfig config;
+    TalkenStakingConfig config;
     /// @notice Total supply of WCT locked
     uint256 supply;
     /// @notice Maximum lock duration
@@ -209,9 +209,10 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     _grantRole(DEFAULT_ADMIN_ROLE, init.admin);
 
     StakeWeightStorage storage s = _getStakeWeightStorage();
-    s.config = WalletConnectConfig(init.config);
+    s.config = TalkenStakingConfig(init.config);
     // Around 2 years in seconds (based on weeks)
-    s.maxLock = 105 weeks - 1;
+//    s.maxLock = 105 weeks - 1;
+    s.maxLock = 105 hours - 1;
     s.pointHistory.push(Point({ bias: 0, slope: 0, timestamp: block.timestamp, blockNumber: block.number }));
   }
 
@@ -395,7 +396,8 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     for (uint256 i = 0; i < 255; i++) {
       // This logic will works for 5 years, if more than that vote power will be broken 😟
       // Bump weekCursor a week
-      weekCursor = weekCursor + 1 weeks;
+      // weekCursor = weekCursor + 1 weeks;
+      weekCursor = weekCursor + 1 hours;
       int128 slopeDelta = 0;
       if (weekCursor > block.timestamp) {
         // If the given weekCursor go beyond block.timestamp,
@@ -525,17 +527,14 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
 
     _depositFor(for_, amount, unlockTime, locked, ACTION_CREATE_LOCK, isTransferred);
   }
+
   /// @notice Deposit `amount` tokens for `for_` and add to `locks[for_]`
   /// @dev This function is used for deposit to created lock. Not for extend locktime.
   /// @param for_ The address to do the deposit
   /// @param amount The amount that user wishes to deposit
-
   function depositFor(address for_, uint256 amount) external nonReentrant {
     StakeWeightStorage storage s = _getStakeWeightStorage();
     if (Pauser(s.config.getPauser()).isStakeWeightPaused()) revert Paused();
-    if (L2WCT(s.config.getL2wct()).transferRestrictionsDisabledAfter() >= block.timestamp) {
-      revert TransferRestrictionsEnabled();
-    }
     LockedBalance memory lock = LockedBalance({
       amount: s.locks[for_].amount,
       end: s.locks[for_].end,
@@ -596,11 +595,34 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     _checkpoint(for_, prevLocked, newLocked);
 
     if (isTransferred) {
-      IERC20(s.config.getL2wct()).safeTransferFrom(msg.sender, address(this), amount);
+      IERC20(s.config.getTalken()).safeTransferFrom(msg.sender, address(this), amount);
     }
 
     emit Deposit(for_, amount, newLocked.end, actionType, isTransferred ? amount : 0, block.timestamp);
     emit Supply(supplyBefore, s.supply);
+  }
+
+  // TODO : Peter가 만든 함수
+  /// @notice Do Binary Search to find out epoch for specific timestamp
+  /// @param timestamp The timestamp to find epoch
+  /// @param maxEpoch No beyond this timestamp
+  function _findTimestampEpoch(uint256 timestamp, uint256 maxEpoch) internal view returns (uint256) {
+    StakeWeightStorage storage s = _getStakeWeightStorage();
+    uint256 min = 0;
+    uint256 max = maxEpoch;
+    // Loop for 128 times -> enough for 128-bit numbers
+    for (uint256 i = 0; i < 128; i++) {
+      if (min >= max) {
+        break;
+      }
+      uint256 mid = (min + max + 1) / 2;
+      if (s.pointHistory[mid].timestamp <= timestamp) {
+        min = mid;
+      } else {
+        max = mid - 1;
+      }
+    }
+    return min;
   }
 
   /// @notice Do Binary Search to find out block timestamp for block number
@@ -718,7 +740,8 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   /// @notice Round off random timestamp to week
   /// @param timestamp The timestamp to be rounded off
   function _timestampToFloorWeek(uint256 timestamp) internal pure returns (uint256) {
-    return (timestamp / 1 weeks) * 1 weeks;
+    // return (timestamp / 1 weeks) * 1 weeks;
+    return (timestamp / 1 hours) * 1 hours;
   }
 
   /// @notice Calculate total supply of Stake Weight
@@ -727,11 +750,15 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     return _totalSupplyAt(s.pointHistory[s.epoch], block.timestamp);
   }
 
-  /// @notice Calculate total supply of Stake Weight at at specific timestamp
+  // TODO : Peter가 수정한 함수
+  /// @notice Calculate total supply of Stake Weight at specific timestamp
   /// @param timestamp The specific timestamp to calculate totalSupply
   function totalSupplyAtTime(uint256 timestamp) external view returns (uint256) {
     StakeWeightStorage storage s = _getStakeWeightStorage();
-    return _totalSupplyAt(s.pointHistory[s.epoch], timestamp);
+    uint256 epoch_ = s.epoch;
+    uint256 targetEpoch = _findTimestampEpoch(timestamp, epoch_);
+
+    return _totalSupplyAt(s.pointHistory[targetEpoch], timestamp);
   }
 
   /// @notice Calculate total supply of Stake Weight at specific block
@@ -769,7 +796,8 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     uint256 weekCursor = _timestampToFloorWeek(point.timestamp);
     // Iterate through weeks to take slopChanges into the account
     for (uint256 i = 0; i < 255; i++) {
-      weekCursor = weekCursor + 1 weeks;
+      // weekCursor = weekCursor + 1 weeks;
+      weekCursor = weekCursor + 1 hours;
       int128 slopeDelta = 0;
       if (weekCursor > timestamp) {
         // If weekCursor goes beyond timestamp -> leave slopeDelta
@@ -828,7 +856,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
 
     // transfer remaining back to owner
     if (transferredAmount > 0) {
-      IERC20(s.config.getL2wct()).safeTransfer(to, transferredAmount);
+      IERC20(s.config.getTalken()).safeTransfer(to, transferredAmount);
     }
 
     emit ForcedWithdraw(to, amount, transferredAmount, block.timestamp, end);
@@ -836,7 +864,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
 
   function _withdrawAll(address user) internal {
     StakeWeightStorage storage s = _getStakeWeightStorage();
-    WalletConnectConfig wcConfig = s.config;
+    TalkenStakingConfig wcConfig = s.config;
     if (Pauser(wcConfig.getPauser()).isStakeWeightPaused()) revert Paused();
     LockedBalance memory lock = s.locks[user];
     uint256 amount = SafeCast.toUint256(lock.amount);
@@ -848,7 +876,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     _unlock(user, lock, amount);
 
     if (transferredAmount > 0) {
-      IERC20(wcConfig.getL2wct()).safeTransfer(user, transferredAmount);
+      IERC20(wcConfig.getTalken()).safeTransfer(user, transferredAmount);
     }
 
     emit Withdraw(user, amount, transferredAmount, block.timestamp);
@@ -934,7 +962,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     return s.supply;
   }
 
-  function config() external view returns (WalletConnectConfig) {
+  function config() external view returns (TalkenStakingConfig) {
     StakeWeightStorage storage s = _getStakeWeightStorage();
     return s.config;
   }

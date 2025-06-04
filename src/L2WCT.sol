@@ -72,7 +72,7 @@ contract L2WCT is
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
-//    _disableInitializers();
+    _disableInitializers();
   }
 
   /// @notice Initialization data for the contract
