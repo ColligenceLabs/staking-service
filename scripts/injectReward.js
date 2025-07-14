@@ -33,12 +33,12 @@ async function claim(user) {
 
 async function checkpoint() {
   let tx = await stakingRewardDistributor.checkpointTotalSupply({
-    gasLimit: 1000000,
+    gasLimit: 3000000,
   });
   let receipt = await tx.wait();
   console.log("checkpointTotalSupply \t:", tx.hash, receipt.status);
 
-  tx = await stakingRewardDistributor.checkpointToken({ gasLimit: 1000000 });
+  tx = await stakingRewardDistributor.checkpointToken({ gasLimit: 3000000 });
   receipt = await tx.wait();
   console.log("checkpointToken \t:", tx.hash, receipt.status);
 
@@ -85,16 +85,21 @@ async function injectReward(timestamp, flag = false) {
     // TODO : send TALK for rewards automatically
     // await stakingRewardDistributor.injectReward(timestamp, reward);
   } else {
-    console.log("timestamp not matched. run at next epoch !!");
+    console.log(
+      "timestamp not matched. run at next epoch !!",
+      Number(pointHistory[2]),
+      timestamp,
+    );
   }
   return min;
 }
 
-const task = cron.schedule("5 * * * *", async () => {
+const task = cron.schedule("0 0 * * 4", async () => {
   // TODO : 메주 리워드 지급 시점 직후에 계산헤서 넣어두먄 될 듯....
   // 매 주 checkpoint() 실행 후 계산 ?
   const now = Math.floor(Date.now() / 1000);
-  const timestamp = Math.floor(now / 3600) * 3600;
+  // const timestamp = Math.floor(now / 3600) * 3600; // Testnet - per hour
+  const timestamp = Math.floor(now / 604800) * 604800; // Mainnet - per week
   console.log("Timestamp : ", timestamp);
 
   await injectReward(timestamp, true);
