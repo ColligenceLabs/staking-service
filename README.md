@@ -8,7 +8,7 @@ yarn install
 
 yarn compile
 
-yarn deploy
+yarn deployStaking
 
-yarn deploy:upgrade
+yarn upgradeStaking
 ```
