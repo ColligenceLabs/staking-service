@@ -62,8 +62,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   // Define the storage namespace
   bytes32 constant STAKE_WEIGHT_STORAGE_POSITION = keccak256("com.walletconnect.stakeweight.storage");
   // Max lock duration
-//  uint256 public constant MAX_LOCK_CAP = (209 weeks) - 1;
-  uint256 public constant MAX_LOCK_CAP = (209 hours) - 1;
+  uint256 public constant MAX_LOCK_CAP = (209 weeks) - 1;
   // Multiplier for the slope calculation
   uint256 public constant MULTIPLIER = 1e18;
   // Action Types
@@ -211,8 +210,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     StakeWeightStorage storage s = _getStakeWeightStorage();
     s.config = TalkenStakingConfig(init.config);
     // Around 2 years in seconds (based on weeks)
-//    s.maxLock = 105 weeks - 1;
-    s.maxLock = 105 hours - 1;
+    s.maxLock = 105 weeks - 1;
     s.pointHistory.push(Point({ bias: 0, slope: 0, timestamp: block.timestamp, blockNumber: block.number }));
   }
 
@@ -396,8 +394,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     for (uint256 i = 0; i < 255; i++) {
       // This logic will works for 5 years, if more than that vote power will be broken 😟
       // Bump weekCursor a week
-      // weekCursor = weekCursor + 1 weeks;
-      weekCursor = weekCursor + 1 hours;
+      weekCursor = weekCursor + 1 weeks;
       int128 slopeDelta = 0;
       if (weekCursor > block.timestamp) {
         // If the given weekCursor go beyond block.timestamp,
@@ -602,7 +599,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     emit Supply(supplyBefore, s.supply);
   }
 
-  // TODO : Peter가 만든 함수
+  // TODO : Peter Nahm 만든 함수
   /// @notice Do Binary Search to find out epoch for specific timestamp
   /// @param timestamp The timestamp to find epoch
   /// @param maxEpoch No beyond this timestamp
@@ -740,8 +737,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
   /// @notice Round off random timestamp to week
   /// @param timestamp The timestamp to be rounded off
   function _timestampToFloorWeek(uint256 timestamp) internal pure returns (uint256) {
-    // return (timestamp / 1 weeks) * 1 weeks;
-    return (timestamp / 1 hours) * 1 hours;
+    return (timestamp / 1 weeks) * 1 weeks;
   }
 
   /// @notice Calculate total supply of Stake Weight
@@ -750,9 +746,15 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     return _totalSupplyAt(s.pointHistory[s.epoch], block.timestamp);
   }
 
-  // TODO : Peter가 수정한 함수
+  // TODO : Peter Nahm 수정한 함수
   /// @notice Calculate total supply of Stake Weight at specific timestamp
   /// @param timestamp The specific timestamp to calculate totalSupply
+  /*
+  function totalSupplyAtTime(uint256 timestamp) external view returns (uint256) {
+    StakeWeightStorage storage s = _getStakeWeightStorage();
+    return _totalSupplyAt(s.pointHistory[s.epoch], timestamp);
+  }
+  */
   function totalSupplyAtTime(uint256 timestamp) external view returns (uint256) {
     StakeWeightStorage storage s = _getStakeWeightStorage();
     uint256 epoch_ = s.epoch;
@@ -796,8 +798,7 @@ contract StakeWeight is Initializable, AccessControlUpgradeable, ReentrancyGuard
     uint256 weekCursor = _timestampToFloorWeek(point.timestamp);
     // Iterate through weeks to take slopChanges into the account
     for (uint256 i = 0; i < 255; i++) {
-      // weekCursor = weekCursor + 1 weeks;
-      weekCursor = weekCursor + 1 hours;
+      weekCursor = weekCursor + 1 weeks;
       int128 slopeDelta = 0;
       if (weekCursor > timestamp) {
         // If weekCursor goes beyond timestamp -> leave slopeDelta

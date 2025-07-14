@@ -205,8 +205,7 @@ contract StakingRewardDistributor is Initializable, Ownable2StepUpgradeable, Ree
 
     // Iterate through weeks to filled out missing tokensPerWeek (if any)
     for (uint256 i = 0; i < 52; i++) {
-//      nextWeekCursor = thisWeekCursor + 1 weeks;
-      nextWeekCursor = thisWeekCursor + 1 hours;
+      nextWeekCursor = thisWeekCursor + 1 weeks;
 
       // if block.timestamp < nextWeekCursor, means nextWeekCursor goes
       // beyond the actual block.timestamp, hence it is the last iteration
@@ -265,8 +264,7 @@ contract StakingRewardDistributor is Initializable, Ownable2StepUpgradeable, Ree
           totalSupplyAt[weekCursor_] = SafeCast.toUint256(bias);
         }
       }
-//      weekCursor_ = weekCursor_ + 1 weeks;
-      weekCursor_ = weekCursor_ + 1 hours;
+      weekCursor_ = weekCursor_ + 1 weeks;
     }
 
     weekCursor = weekCursor_;
@@ -312,8 +310,7 @@ contract StakingRewardDistributor is Initializable, Ownable2StepUpgradeable, Ree
     StakeWeight.Point memory userPoint = stakeWeight.userPointHistory(user, userEpoch);
 
     if (userWeekCursor == 0) {
-//      userWeekCursor = ((userPoint.timestamp + 1 weeks - 1) / 1 weeks) * 1 weeks;
-      userWeekCursor = ((userPoint.timestamp + 1 hours - 1) / 1 hours) * 1 hours;
+      userWeekCursor = ((userPoint.timestamp + 1 weeks - 1) / 1 weeks) * 1 weeks;
     }
 
     // userWeekCursor is already at/beyond maxClaimTimestamp
@@ -367,8 +364,7 @@ contract StakingRewardDistributor is Initializable, Ownable2StepUpgradeable, Ree
           toDistribute =
             toDistribute + (balanceOf * tokensPerWeek[userWeekCursor]) / totalSupplyAt[userWeekCursor];
         }
-//        userWeekCursor = userWeekCursor + 1 weeks;
-        userWeekCursor = userWeekCursor + 1 hours;
+        userWeekCursor = userWeekCursor + 1 weeks;
       }
     }
 
@@ -508,8 +504,7 @@ contract StakingRewardDistributor is Initializable, Ownable2StepUpgradeable, Ree
   /// @notice Round off random timestamp to week
   /// @param timestamp The timestamp to be rounded off
   function _timestampToFloorWeek(uint256 timestamp) internal pure returns (uint256) {
-//    return (timestamp / 1 weeks) * 1 weeks;
-    return (timestamp / 1 hours) * 1 hours;
+    return (timestamp / 1 weeks) * 1 weeks;
   }
 
   /// @notice Inject rewardToken into the contract
