@@ -46,7 +46,7 @@ async function checkpoint() {
   // claim(user);;
 }
 
-async function injectReward(timestamp, flag = false) {
+async function getNeededReward(timestamp, flag = false) {
   if (flag) await checkpoint();
 
   let min = 0;
@@ -102,7 +102,7 @@ const task = cron.schedule("0 0 * * 4", async () => {
   const timestamp = Math.floor(now / 604800) * 604800; // Mainnet - per week
   console.log("Timestamp : ", timestamp);
 
-  await injectReward(timestamp, true);
+  await getNeededReward(timestamp, true);
   console.log("\n\n");
 });
 task.start();
