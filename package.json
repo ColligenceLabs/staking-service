@@ -6,9 +6,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "deployStaking": "hardhat run ./scripts/deployStaking.js --network sepolia",
-    "upgradeStaking": "hardhat run ./scripts/upgradeStaking.js --network sepolia",
-    "getProxyInfo": "hardhat run ./scripts/getProxyInfo.js --network sepolia",
+    "deployStaking": "hardhat run ./scripts/deployStaking.js --network ethereum",
+    "upgradeStaking": "hardhat run ./scripts/upgradeStaking.js --network ethereum",
+    "getProxyInfo": "hardhat run ./scripts/getProxyInfo.js --network ethereum",
     "test": "hardhat test"
   },
   "keywords": [],

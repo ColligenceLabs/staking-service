@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const {
   INFURA_API_KEY,
+  MAINNET_PRIVATE_KEY,
   SEPOLIA_PRIVATE_KEY,
   KAIROS_PRIVATE_KEY,
   ETHERSCAN_KEY,
@@ -28,6 +29,10 @@ module.exports = {
     artifacts: "./artifacts",
   },
   networks: {
+    ethereum: {
+      url: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
+      accounts: [MAINNET_PRIVATE_KEY],
+    },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [SEPOLIA_PRIVATE_KEY],
