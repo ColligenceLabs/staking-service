@@ -14,7 +14,8 @@ const rewardAbi =
 
 require("dotenv").config();
 
-const provider = new ethers.JsonRpcProvider(RPC_URLS[11155111]);
+// const provider = new ethers.JsonRpcProvider(RPC_URLS[11155111]);
+const provider = new ethers.JsonRpcProvider(RPC_URLS[1]);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const stakeWeight = new ethers.Contract(StakeWeight, weightAbi, wallet);
 const stakingRewardDistributor = new ethers.Contract(
@@ -105,4 +106,18 @@ const task = cron.schedule("0 0 * * 4", async () => {
   await getNeededReward(timestamp, true);
   console.log("\n\n");
 });
-task.start();
+
+const main = async () => {
+  // TODO : 메주 리워드 지급 시점 직후에 계산헤서 넣어두먄 될 듯....
+  // 매 주 checkpoint() 실행 후 계산 ?
+  const now = Math.floor(Date.now() / 1000);
+  // const timestamp = Math.floor(now / 3600) * 3600; // Testnet - per hour
+  const timestamp = Math.floor(now / 604800) * 604800; // Mainnet - per week
+  console.log("Timestamp : ", timestamp);
+
+  await getNeededReward(timestamp);
+  console.log("\n\n");
+};
+
+// task.start();
+main();
