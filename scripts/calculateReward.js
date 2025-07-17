@@ -46,11 +46,11 @@ async function getRewardInfo(user, timestamp) {
   let totalSupplyAtTime = BigInt("0");
 
   try {
-    // balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
-    balanceOfAtTime = await stakingRewardDistributor.balanceOfAt(
-      user,
-      timestamp,
-    );
+    balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
+    // balanceOfAtTime = await stakingRewardDistributor.balanceOfAt(
+    //   user,
+    //   timestamp,
+    // );
   } catch (e) {
     // console.log("balanceOfAtTime error : ", e.message);
   }
