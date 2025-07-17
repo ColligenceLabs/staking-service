@@ -46,10 +46,15 @@ async function getRewardInfo(user, timestamp) {
   let totalSupplyAtTime = BigInt("0");
 
   try {
-    balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
+    // balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
+    balanceOfAtTime = await stakingRewardDistributor.balanceOfAt(
+      user,
+      timestamp,
+    );
   } catch (e) {
     // console.log("balanceOfAtTime error : ", e.message);
   }
+
   try {
     tokensPerWeek = await stakingRewardDistributor.tokensPerWeek(timestamp);
   } catch (e) {
@@ -161,8 +166,8 @@ async function calculateReward(flag = false) {
   // let step = parseInt((timestamp + 604800 - 1) / 604800) * 604800;
   // let step = parseInt(timestamp / 604800) * 604800;
   // let step = Math.floor(timestamp / 604800) * 604800;
-  let step = startWeekCursor;
-  // let step = 1751562000;
+  // let step = startWeekCursor;
+  let step = 1750896000;
 
   console.log("step : ", step);
   while (step <= endTimestamp + 604800) {
