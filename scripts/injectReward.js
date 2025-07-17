@@ -68,30 +68,31 @@ async function getNeededReward(timestamp, flag = false) {
   console.log("_findTimestampEpoch : ", min);
 
   const pointHistory = await stakeWeight.pointHistory(min);
-  if (Number(pointHistory[2]) === timestamp) {
-    const lockedAmount = pointHistory[1] * BigInt("752399"); // MAX_LOCK_CAP;
-    console.log(
-      `>> Locked Amount at ${timestamp} : ${parseFloat(ethers.formatEther(lockedAmount)).toFixed(2)}`,
-    );
+  // if (Number(pointHistory[2]) === timestamp) {
+  // const lockedAmount = pointHistory[1] * BigInt("752399"); // MAX_LOCK_CAP;
+  const lockedAmount = pointHistory[1] * BigInt("126403199"); // MAX_LOCK_CAP;
+  console.log(
+    `>> Locked Amount at ${timestamp} : ${parseFloat(ethers.formatEther(lockedAmount)).toFixed(2)}`,
+  );
 
-    // TODO : 개발기 시간 단위 지급 경우, APY 20%, APR 18.2%
-    const reward = (lockedAmount * BigInt("182")) / BigInt("1000");
-    // TODO : 상용기 주단위 지급 경우, APY 20%, APR 18.23%
-    // const reward = (lockedAmount * BigInt("1823")) / BigInt("10000");
+  // TODO : 개발기 시간 단위 지급 경우, APY 20%, APR 18.2%
+  const reward = (lockedAmount * BigInt("182")) / BigInt("1000");
+  // TODO : 상용기 주단위 지급 경우, APY 20%, APR 18.23%
+  // const reward = (lockedAmount * BigInt("1823")) / BigInt("10000");
 
-    console.log(
-      `>> Reward needed ${timestamp} : ${parseFloat(ethers.formatEther(reward.toString())).toFixed(2)}`,
-    );
+  console.log(
+    `>> Reward needed ${timestamp} : ${parseFloat(ethers.formatEther(reward.toString())).toFixed(2)}`,
+  );
 
-    // TODO : send TALK for rewards automatically
-    // await stakingRewardDistributor.injectReward(timestamp, reward);
-  } else {
-    console.log(
-      "timestamp not matched. run at next epoch !!",
-      Number(pointHistory[2]),
-      timestamp,
-    );
-  }
+  // TODO : send TALK for rewards automatically
+  // await stakingRewardDistributor.injectReward(timestamp, reward);
+  // } else {
+  //   console.log(
+  //     "timestamp not matched. run at next epoch !!",
+  //     Number(pointHistory[2]),
+  //     timestamp,
+  //   );
+  // }
   return min;
 }
 
@@ -115,7 +116,7 @@ const main = async () => {
   const timestamp = Math.floor(now / 604800) * 604800; // Mainnet - per week
   console.log("Timestamp : ", timestamp);
 
-  await getNeededReward(timestamp);
+  await getNeededReward(timestamp, false);
   console.log("\n\n");
 };
 

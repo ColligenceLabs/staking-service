@@ -15,7 +15,8 @@ const rewardAbi =
 
 require("dotenv").config();
 
-const provider = new ethers.JsonRpcProvider(RPC_URLS[11155111]);
+// const provider = new ethers.JsonRpcProvider(RPC_URLS[11155111]);
+const provider = new ethers.JsonRpcProvider(RPC_URLS[1]);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const stakeWeight = new ethers.Contract(StakeWeight, weightAbi, wallet);
 const stakingRewardDistributor = new ethers.Contract(
@@ -103,7 +104,7 @@ async function calculateReward(flag = false) {
   // const user = await wallet.getAddress();
   // const user = "0x521e21Bf9f930257293887C0575eD2dF714E53b8";
   // const user = "0x1716C4d49E9D81c17608CD9a45b1023ac9DF6c73";
-  const user = "0x68db12A0D87aB61A9C9e9Bc719ce57c1Ad8585F5"; // GiangNV
+  const user = "0x1b9b97d05C6e14a46c4B7CA07CbB34b0A1bE1941"; // GiangNV
   const timestamp = parseInt(Date.now() / 1000);
   console.log("user : ", user, timestamp);
 
@@ -137,9 +138,10 @@ async function calculateReward(flag = false) {
     const userPoint = await stakeWeight.userPointHistory(user, userEpoch);
     // console.log("userPoint : ", userPoint);
 
-    weekCursor = parseInt((Number(userPoint[2]) + 3600 - 1) / 3600) * 3600;
+    weekCursor =
+      parseInt((Number(userPoint[2]) + 604800 - 1) / 604800) * 604800;
   }
-  // console.log("weekCursor : ", weekCursor);
+  console.log("weekCursor : ", weekCursor);
 
   // 알고리즘 #1
   let totalReward = 0;
@@ -147,7 +149,7 @@ async function calculateReward(flag = false) {
   //   console.log("weekCursor : ", weekCursor);
   //   const reward = await getRewardInfo(user, weekCursor);
   //   totalReward += reward;
-  //   weekCursor = weekCursor + 3600;
+  //   weekCursor = weekCursor + 604800;
   // }
   // console.log("totalReward : ", totalReward);
 
@@ -156,18 +158,18 @@ async function calculateReward(flag = false) {
   const endTimestamp = Number(lock[1]);
   console.log("lock end : ", endTimestamp);
 
-  // let step = parseInt((timestamp + 3600 - 1) / 3600) * 3600;
-  // let step = parseInt(timestamp / 3600) * 3600;
-  // let step = Math.floor(timestamp / 3600) * 3600;
-  // let step = startWeekCursor;
-  let step = 1751562000;
+  // let step = parseInt((timestamp + 604800 - 1) / 604800) * 604800;
+  // let step = parseInt(timestamp / 604800) * 604800;
+  // let step = Math.floor(timestamp / 604800) * 604800;
+  let step = startWeekCursor;
+  // let step = 1751562000;
 
   console.log("step : ", step);
-  while (step <= endTimestamp + 3600) {
+  while (step <= endTimestamp + 604800) {
     const reward = await getRewardInfo(user, step);
     if (reward !== 0) console.log("reward : ", step, reward);
     totalReward += reward;
-    step += 3600;
+    step += 604800;
   }
   console.log("totalReward : ", totalReward);
 }
@@ -190,6 +192,19 @@ async function claim(user) {
   });
   let receipt = await tx.wait();
   console.log("checkpointTotalSupply \t:", tx.hash, receipt.status);
+}
+
+async function _findTimestampUserEpoch(user, timestamp, maxUserEpoch) {
+  let min = 0;
+  let max = maxUserEpoch;
+  for (let i = 0; i < 128; i++) {
+    if (min >= max) break;
+    let mid = Math.floor((min + max + 1) / 2);
+    const point = await stakeWeight.userPointHistory(user, mid);
+    if (Number(point[2]) <= timestamp) min = mid;
+    else max = mid - 1;
+  }
+  return min;
 }
 
 async function _claim(tokensPerWeek) {
@@ -244,7 +259,8 @@ async function _claim(tokensPerWeek) {
 
   if (userWeekCursor === 0) {
     //      userWeekCursor = ((userPoint.timestamp + 1 weeks - 1) / 1 weeks) * 1 weeks;
-    userWeekCursor = parseInt((Number(userPoint[2]) + 3600 - 1) / 3600) * 3600;
+    userWeekCursor =
+      parseInt((Number(userPoint[2]) + 604800 - 1) / 604800) * 604800;
   }
   console.log("userWeekCursor \t\t:", userWeekCursor);
 
@@ -325,7 +341,7 @@ async function _claim(tokensPerWeek) {
             );
       }
       //        userWeekCursor = userWeekCursor + 1 weeks;
-      userWeekCursor = userWeekCursor + 3600;
+      userWeekCursor = userWeekCursor + 604800;
     }
   }
 
@@ -337,13 +353,13 @@ async function _claim(tokensPerWeek) {
 
 async function tokensPerWeek() {
   let tokens = {};
-  // let timestamp = parseInt(timestamp / 3600) * 3600;
+  // let timestamp = parseInt(timestamp / 604800) * 604800;
   let timestamp = 1751562000;
 
   for (let i = 0; i < 10; i++) {
     const token = await stakingRewardDistributor.tokensPerWeek(timestamp);
     tokens[timestamp] = token;
-    timestamp += 3600;
+    timestamp += 604800;
   }
   return tokens;
 }
@@ -356,7 +372,7 @@ calculateReward(process.argv[2]);
 //   [1749020400]: "18.2",
 //   [1749024000]: "18.2",
 // };
-tokensPerWeek().then((rewards) => {
-  console.log("tokensPerWeek = ", rewards);
-  // _claim(rewards);
-});
+// tokensPerWeek().then((rewards) => {
+//   console.log("tokensPerWeek = ", rewards);
+//   // _claim(rewards);
+// });
