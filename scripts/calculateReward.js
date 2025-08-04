@@ -46,11 +46,11 @@ async function getRewardInfo(user, timestamp) {
   let totalSupplyAtTime = BigInt("0");
 
   try {
-    balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
-    // balanceOfAtTime = await stakingRewardDistributor.balanceOfAt(
-    //   user,
-    //   timestamp,
-    // );
+    // balanceOfAtTime = await stakeWeight.balanceOfAtTime(user, timestamp);
+    balanceOfAtTime = await stakingRewardDistributor.balanceOfAt(
+      user,
+      timestamp,
+    );
   } catch (e) {
     // console.log("balanceOfAtTime error : ", e.message);
   }
@@ -61,7 +61,8 @@ async function getRewardInfo(user, timestamp) {
     // console.log("tokensPerWeek error : ", e.message);
   }
   try {
-    totalSupplyAtTime = await stakeWeight.totalSupplyAtTime(timestamp);
+    // totalSupplyAtTime = await stakeWeight.totalSupplyAtTime(timestamp);
+    totalSupplyAtTime = await stakingRewardDistributor.totalSupplyAt(timestamp);
   } catch (e) {
     // console.log("totalSupplyAtTime error : ", e.message);
   }
@@ -109,7 +110,8 @@ async function calculateReward(flag = false) {
   // const user = await wallet.getAddress();
   // const user = "0x521e21Bf9f930257293887C0575eD2dF714E53b8";
   // const user = "0x1716C4d49E9D81c17608CD9a45b1023ac9DF6c73";
-  const user = "0x1b9b97d05C6e14a46c4B7CA07CbB34b0A1bE1941"; // GiangNV
+  // const user = "0x1b9b97d05C6e14a46c4B7CA07CbB34b0A1bE1941"; // GiangNV
+  const user = "0xbf4b3b6f3f37aACfB9F1b9674e03430BE39f3a11"; // A user withdrawAll before claim
   const timestamp = parseInt(Date.now() / 1000);
   console.log("user : ", user, timestamp);
 
@@ -160,14 +162,15 @@ async function calculateReward(flag = false) {
 
   // 알고리즘 #2 <- 이게 더 맞는 계산법인가 ?
   const lock = await stakeWeight.locks(user);
-  const endTimestamp = Number(lock[1]);
+  let endTimestamp = Number(lock[1]);
   console.log("lock end : ", endTimestamp);
 
   // let step = parseInt((timestamp + 604800 - 1) / 604800) * 604800;
   // let step = parseInt(timestamp / 604800) * 604800;
   // let step = Math.floor(timestamp / 604800) * 604800;
   // let step = startWeekCursor;
-  let step = 1750896000;
+  let step = 1750896000; // <-- Change if it is needed
+  if (endTimestamp === 0) endTimestamp = 1754270394;
 
   console.log("step : ", step);
   while (step <= endTimestamp + 604800) {
