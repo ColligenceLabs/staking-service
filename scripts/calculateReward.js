@@ -111,7 +111,7 @@ async function calculateReward(flag = false) {
   // const user = "0x521e21Bf9f930257293887C0575eD2dF714E53b8";
   // const user = "0x1716C4d49E9D81c17608CD9a45b1023ac9DF6c73";
   // const user = "0x1b9b97d05C6e14a46c4B7CA07CbB34b0A1bE1941"; // GiangNV
-  const user = "0xbf4b3b6f3f37aACfB9F1b9674e03430BE39f3a11"; // A user withdrawAll before claim
+  const user = "0x5758d8f888ec33846B574c209DC86FD451806382"; // A user withdrawAll before claim
   const timestamp = parseInt(Date.now() / 1000);
   console.log("user : ", user, timestamp);
 
